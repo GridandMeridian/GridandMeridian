@@ -1,0 +1,805 @@
+```html
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Grid & Meridian | Canada & USA Asset Platform</title>
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Leaflet CSS & JS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- Custom Styling & Dark Map Overrides -->
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+        
+        * {
+            box-sizing: border-box;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+        }
+
+        body {
+            background-color: #0B0F17;
+            color: #E2E8F0;
+            overflow-x: hidden;
+        }
+
+        /* Leaflet Dark Theme Adjustments */
+        .leaflet-tile {
+            filter: brightness(0.65) invert(1) contrast(2.8) hue-rotate(200deg) saturate(0.3) brightness(0.7);
+        }
+        
+        .leaflet-container {
+            background-color: #0B0F17 !important;
+            font-family: 'Inter', sans-serif !important;
+        }
+
+        .leaflet-popup-content-wrapper {
+            background-color: #1E293B !important;
+            color: #F8FAFC !important;
+            border: 1px solid #334155;
+            border-radius: 12px;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            padding: 4px;
+        }
+
+        .leaflet-popup-tip {
+            background-color: #1E293B !important;
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #0F172A;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #334155;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #475569;
+        }
+
+        /* Metallic Gold Gradient Text */
+        .gold-gradient-text {
+            background: linear-gradient(135deg, #F59E0B 0%, #FBBF24 50%, #D97706 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .gold-border {
+            border-color: rgba(245, 158, 11, 0.4);
+        }
+
+        /* Animations */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(6px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .animate-fade-in {
+            animation: fadeIn 0.25s ease-out forwards;
+        }
+    </style>
+</head>
+<body class="flex flex-col min-h-screen bg-[#0B0F17] text-slate-200">
+
+    <!-- NAVIGATION HEADER -->
+    <header class="bg-[#0F172A]/90 backdrop-blur-md border-b border-slate-800/80 sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                
+                <!-- Brand / Logo -->
+                <div class="flex items-center space-x-3 cursor-pointer" onclick="switchTab('map-view')">
+                    <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-400 via-amber-500 to-amber-700 flex items-center justify-center text-slate-950 font-black text-xl shadow-lg shadow-amber-500/20 ring-1 ring-amber-400/50">
+                        <i class="fa-solid fa-globe"></i>
+                    </div>
+                    <div>
+                        <span class="text-lg md:text-xl font-black tracking-wider text-white">GRID <span class="gold-gradient-text">&amp; MERIDIAN</span></span>
+                        <p class="text-[10px] text-slate-400 font-semibold tracking-widest uppercase">Canada &amp; USA Asset Platform</p>
+                    </div>
+                </div>
+
+                <!-- Navigation Tabs (NO LENDER SECTION) -->
+                <nav class="hidden md:flex space-x-2 text-xs font-bold">
+                    <button onclick="switchTab('map-view')" id="nav-map-view" class="px-4 py-2 rounded-lg text-amber-400 bg-amber-500/10 border border-amber-500/30 transition shadow-sm">
+                        <i class="fa-solid fa-map-location-dot mr-2"></i>Browse Map &amp; Feed
+                    </button>
+                    <button onclick="switchTab('pricing-view')" id="nav-pricing-view" class="px-4 py-2 rounded-lg text-slate-300 hover:text-white hover:bg-slate-800 transition">
+                        <i class="fa-solid fa-tags mr-2"></i>Memberships &amp; Pricing
+                    </button>
+                    <button onclick="switchTab('dashboard-view')" id="nav-dashboard-view" class="px-4 py-2 rounded-lg text-slate-300 hover:text-white hover:bg-slate-800 transition">
+                        <i class="fa-solid fa-chart-line mr-2"></i>Owner Dashboard
+                    </button>
+                </nav>
+
+                <!-- Actions & Currency Selector -->
+                <div class="flex items-center space-x-3">
+                    
+                    <!-- Currency Switcher Toggle -->
+                    <div class="bg-slate-900/90 p-1 rounded-xl border border-slate-800 flex items-center text-xs font-bold shadow-inner">
+                        <button id="curr-cad" onclick="setCurrency('CAD')" class="px-3 py-1 rounded-lg bg-amber-500 text-slate-950 shadow transition font-black">🇨🇦 CAD</button>
+                        <button id="curr-usd" onclick="setCurrency('USD')" class="px-3 py-1 rounded-lg text-slate-400 hover:text-white transition">🇺🇸 USD</button>
+                    </div>
+
+                    <!-- Open Listing Modal Button -->
+                    <button onclick="openModal('googleFormModal')" class="bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 font-extrabold px-4 py-2 rounded-xl text-xs shadow-lg shadow-amber-500/20 transition-all transform active:scale-95 flex items-center">
+                        <i class="fa-solid fa-plus-circle mr-1.5 text-sm"></i>List Asset
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- MOBILE NAVIGATION BOTTOM BAR -->
+    <div class="md:hidden fixed bottom-0 left-0 right-0 bg-[#0F172A] border-t border-slate-800 z-40 flex justify-around p-2 text-[10px] font-bold">
+        <button onclick="switchTab('map-view')" class="flex flex-col items-center text-amber-400">
+            <i class="fa-solid fa-map-location-dot text-base mb-1"></i> Map Feed
+        </button>
+        <button onclick="switchTab('pricing-view')" class="flex flex-col items-center text-slate-400">
+            <i class="fa-solid fa-tags text-base mb-1"></i> Pricing
+        </button>
+        <button onclick="switchTab('dashboard-view')" class="flex flex-col items-center text-slate-400">
+            <i class="fa-solid fa-chart-line text-base mb-1"></i> Dashboard
+        </button>
+    </div>
+
+    <!-- MAIN BODY CONTAINER -->
+    <main class="flex-grow flex flex-col relative pb-12 md:pb-0">
+
+        <!-- ================= VIEW 1: MAP & LISTINGS FEED ================= -->
+        <div id="map-view" class="flex-grow flex flex-col lg:flex-row h-[calc(100vh-4rem)]">
+            
+            <!-- LEFT GIS MAP CONTAINER -->
+            <div class="w-full lg:w-3/5 h-1/2 lg:h-full relative border-r border-slate-800">
+                <div id="map" class="w-full h-full z-10"></div>
+
+                <!-- FLOATING COUNTRY / JURISDICTION FILTER -->
+                <div class="absolute top-4 left-4 z-20 bg-slate-900/90 backdrop-blur border border-slate-700/80 p-3 rounded-2xl shadow-2xl space-y-2 max-w-xs text-xs">
+                    <div class="flex items-center justify-between font-bold text-slate-200 border-b border-slate-800 pb-2">
+                        <span><i class="fa-solid fa-earth-americas text-amber-500 mr-1.5"></i> Geographic Region</span>
+                        <span class="text-[10px] text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded border border-amber-500/20 font-extrabold">1.5% Fee Rate</span>
+                    </div>
+                    <div class="flex space-x-1.5 pt-1">
+                        <button id="btn-country-ALL" onclick="filterCountry('ALL')" class="flex-1 py-1.5 rounded-lg bg-amber-500 text-slate-950 font-extrabold text-center transition">All</button>
+                        <button id="btn-country-CA" onclick="filterCountry('CA')" class="flex-1 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold border border-slate-700 text-center transition">🇨🇦 CA</button>
+                        <button id="btn-country-US" onclick="filterCountry('US')" class="flex-1 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold border border-slate-700 text-center transition">🇺🇸 US</button>
+                    </div>
+                </div>
+
+                <!-- FLOATING PLATFORM CLOSING GUARANTEE -->
+                <div class="hidden sm:flex absolute bottom-6 left-4 z-20 bg-slate-900/95 backdrop-blur border border-amber-500/40 p-3.5 rounded-2xl shadow-2xl items-center space-x-3.5 max-w-md">
+                    <div class="w-10 h-10 rounded-xl bg-amber-500/20 text-amber-400 flex items-center justify-center font-black text-base border border-amber-500/40 shrink-0">
+                        1.5%
+                    </div>
+                    <div>
+                        <p class="text-xs font-black text-white">Flat Rate Platform Closing Fee</p>
+                        <p class="text-[11px] text-slate-400">Keep maximum equity on your property transactions vs traditional 5-6% fees.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- RIGHT SHOWCASE LISTINGS FEED -->
+            <div class="w-full lg:w-2/5 h-1/2 lg:h-full bg-[#0F172A] overflow-y-auto flex flex-col">
+                
+                <!-- Category Filter Top Header -->
+                <div class="p-4 border-b border-slate-800 sticky top-0 bg-[#0F172A]/95 backdrop-blur z-20 space-y-3">
+                    <div class="flex items-center justify-between">
+                        <h2 class="font-black text-base text-white flex items-center">
+                            <i class="fa-solid fa-border-all text-amber-500 mr-2"></i> Portfolio Showcase
+                        </h2>
+                        <!-- BOLD RED SOLD INDICATOR BADGE -->
+                        <span class="text-[10px] bg-red-600/90 text-white font-black px-2.5 py-1 rounded-md shadow uppercase tracking-wider animate-pulse">
+                            <i class="fa-solid fa-lock mr-1"></i> ALL RECENTLY CLOSED / SOLD
+                        </span>
+                    </div>
+
+                    <!-- Category Pills Horizontal Scroll -->
+                    <div class="flex space-x-2 overflow-x-auto pb-1 text-xs">
+                        <button id="btn-cat-ALL" onclick="filterCat('ALL')" class="px-3 py-1.5 rounded-lg bg-amber-500 text-slate-950 font-extrabold whitespace-nowrap shadow">All Types</button>
+                        <button id="btn-cat-LAND" onclick="filterCat('LAND')" class="px-3 py-1.5 rounded-lg bg-slate-800 text-slate-300 hover:text-white whitespace-nowrap border border-slate-700 font-semibold">Raw Land</button>
+                        <button id="btn-cat-FARM" onclick="filterCat('FARM')" class="px-3 py-1.5 rounded-lg bg-slate-800 text-slate-300 hover:text-white whitespace-nowrap border border-slate-700 font-semibold">Farms &amp; Ranches</button>
+                        <button id="btn-cat-RESIDENTIAL" onclick="filterCat('RESIDENTIAL')" class="px-3 py-1.5 rounded-lg bg-slate-800 text-slate-300 hover:text-white whitespace-nowrap border border-slate-700 font-semibold">Residential</button>
+                        <button id="btn-cat-BUSINESS" onclick="filterCat('BUSINESS')" class="px-3 py-1.5 rounded-lg bg-slate-800 text-slate-300 hover:text-white whitespace-nowrap border border-slate-700 font-semibold">Businesses</button>
+                        <button id="btn-cat-RENTAL" onclick="filterCat('RENTAL')" class="px-3 py-1.5 rounded-lg bg-slate-800 text-slate-300 hover:text-white whitespace-nowrap border border-slate-700 font-semibold">Rentals</button>
+                    </div>
+                </div>
+
+                <!-- Listings Cards Feed -->
+                <div id="listings-feed" class="p-4 grid grid-cols-1 gap-4 flex-grow">
+                    <!-- Dynamic rendering via JS -->
+                </div>
+            </div>
+        </div>
+
+        <!-- ================= VIEW 2: PRICING & MEMBERSHIPS ================= -->
+        <div id="pricing-view" class="hidden max-w-7xl mx-auto px-4 py-12 w-full space-y-12 animate-fade-in">
+            <div class="text-center max-w-3xl mx-auto space-y-4">
+                <span class="text-xs font-black tracking-widest text-amber-500 uppercase bg-amber-500/10 px-3.5 py-1.5 rounded-full border border-amber-500/20">Asset Owner &amp; Developer Subscriptions</span>
+                <h2 class="text-3xl md:text-5xl font-black text-white tracking-tight">Simple, Transparent Memberships</h2>
+                <p class="text-slate-400 text-sm md:text-base">Promote and list real estate assets, commercial businesses, and ranch properties across Canada and the United States with our flat 1.5% platform closing fee guarantee.</p>
+            </div>
+
+            <!-- PRICING CARDS GRID ($49 / $99 / $199) -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8 items-stretch">
+                
+                <!-- Silver Tier ($49/mo) -->
+                <div class="bg-slate-900/80 rounded-3xl border border-slate-800 p-8 flex flex-col justify-between hover:border-slate-700 transition relative">
+                    <div class="space-y-6">
+                        <div>
+                            <span class="text-xs font-bold text-slate-400 uppercase tracking-widest">Entry Level</span>
+                            <h3 class="text-2xl font-black text-white mt-1">Silver Plan</h3>
+                            <p class="text-xs text-slate-400 mt-1">Perfect for individual property &amp; land owners.</p>
+                        </div>
+                        <div class="flex items-baseline">
+                            <span class="text-5xl font-black text-white price-silver">$49</span>
+                            <span class="text-slate-400 text-sm font-semibold ml-1.5">/<span class="curr-label">CAD</span> / month</span>
+                        </div>
+                        <div class="border-t border-slate-800 pt-6">
+                            <ul class="space-y-3.5 text-xs text-slate-300 font-medium">
+                                <li class="flex items-center"><i class="fa-solid fa-circle-check text-amber-500 text-sm mr-2.5"></i>1 Active Geographic Map Pin</li>
+                                <li class="flex items-center"><i class="fa-solid fa-circle-check text-amber-500 text-sm mr-2.5"></i>Standard GIS Map &amp; Feed Visibility</li>
+                                <li class="flex items-center"><i class="fa-solid fa-circle-check text-amber-500 text-sm mr-2.5"></i>Direct Owner Lead Submission Form</li>
+                                <li class="flex items-center"><i class="fa-solid fa-circle-check text-amber-500 text-sm mr-2.5"></i>Standard 1.5% Flat Rate Fee Savings</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <button onclick="subscribePlan('Silver')" class="mt-8 w-full py-3.5 rounded-xl bg-slate-800 hover:bg-slate-700 font-extrabold text-white text-xs tracking-wider uppercase transition border border-slate-700">
+                        Choose Silver
+                    </button>
+                </div>
+
+                <!-- Gold Tier ($99/mo) - FEATURED -->
+                <div class="bg-slate-900 rounded-3xl border-2 border-amber-500 p-8 flex flex-col justify-between relative shadow-2xl shadow-amber-500/10 transform md:-translate-y-2">
+                    <div class="absolute -top-4 left-1/2 -translate-x-1/2 bg-gradient-to-r from-amber-500 to-amber-600 text-slate-950 text-[10px] font-black uppercase tracking-widest px-4 py-1.5 rounded-full shadow-lg border border-amber-300">
+                        MOST POPULAR CHOICE
+                    </div>
+                    <div class="space-y-6">
+                        <div>
+                            <span class="text-xs font-bold text-amber-400 uppercase tracking-widest">PRO PORTFOLIO</span>
+                            <h3 class="text-2xl font-black text-white mt-1">Gold Plan</h3>
+                            <p class="text-xs text-slate-400 mt-1">For active asset managers &amp; multi-property sellers.</p>
+                        </div>
+                        <div class="flex items-baseline">
+                            <span class="text-5xl font-black text-amber-400 price-gold">$99</span>
+                            <span class="text-slate-400 text-sm font-semibold ml-1.5">/<span class="curr-label">CAD</span> / month</span>
+                        </div>
+                        <div class="border-t border-slate-800 pt-6">
+                            <ul class="space-y-3.5 text-xs text-slate-200 font-medium">
+                                <li class="flex items-center"><i class="fa-solid fa-circle-check text-amber-500 text-sm mr-2.5"></i>Up to 5 Active Map Listings</li>
+                                <li class="flex items-center"><i class="fa-solid fa-circle-check text-amber-500 text-sm mr-2.5"></i>Featured Placement in Feed &amp; Search</li>
+                                <li class="flex items-center"><i class="fa-solid fa-circle-check text-amber-500 text-sm mr-2.5"></i>Instant Email &amp; SMS Lead Notifications</li>
+                                <li class="flex items-center"><i class="fa-solid fa-circle-check text-amber-500 text-sm mr-2.5"></i>Customized Asset Pitch Page</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <button onclick="subscribePlan('Gold')" class="mt-8 w-full py-3.5 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 font-black text-xs tracking-wider uppercase shadow-lg shadow-amber-500/20 transition">
+                        Select Gold Tier
+                    </button>
+                </div>
+
+                <!-- Platinum Tier ($199/mo) -->
+                <div class="bg-slate-900/80 rounded-3xl border border-slate-800 p-8 flex flex-col justify-between hover:border-slate-700 transition relative">
+                    <div class="space-y-6">
+                        <div>
+                            <span class="text-xs font-bold text-slate-400 uppercase tracking-widest">ENTERPRISE</span>
+                            <h3 class="text-2xl font-black text-white mt-1">Platinum Plan</h3>
+                            <p class="text-xs text-slate-400 mt-1">Designed for brokerage firms &amp; commercial developers.</p>
+                        </div>
+                        <div class="flex items-baseline">
+                            <span class="text-5xl font-black text-white price-platinum">$199</span>
+                            <span class="text-slate-400 text-sm font-semibold ml-1.5">/<span class="curr-label">CAD</span> / month</span>
+                        </div>
+                        <div class="border-t border-slate-800 pt-6">
+                            <ul class="space-y-3.5 text-xs text-slate-300 font-medium">
+                                <li class="flex items-center"><i class="fa-solid fa-circle-check text-amber-500 text-sm mr-2.5"></i>Unlimited Active Map Listings</li>
+                                <li class="flex items-center"><i class="fa-solid fa-circle-check text-amber-500 text-sm mr-2.5"></i>Top-Tier Gold Map Pin Badging</li>
+                                <li class="flex items-center"><i class="fa-solid fa-circle-check text-amber-500 text-sm mr-2.5"></i>Banner Promotion Across All Map Views</li>
+                                <li class="flex items-center"><i class="fa-solid fa-circle-check text-amber-500 text-sm mr-2.5"></i>Dedicated Account Manager &amp; Support</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <button onclick="subscribePlan('Platinum')" class="mt-8 w-full py-3.5 rounded-xl bg-slate-800 hover:bg-slate-700 font-extrabold text-white text-xs tracking-wider uppercase transition border border-slate-700">
+                        Choose Platinum
+                    </button>
+                </div>
+            </div>
+
+            <!-- 1.5% FLAT RATE CALCULATOR SECTION -->
+            <div class="bg-slate-900/90 rounded-3xl border border-slate-800 p-8 max-w-4xl mx-auto space-y-6 shadow-2xl">
+                <div class="text-center space-y-1">
+                    <h3 class="text-2xl font-black text-white">1.5% Platform Closing Fee Savings Calculator</h3>
+                    <p class="text-xs text-slate-400">Calculate how much cash equity you retain using Grid &amp; Meridian compared to traditional 5% broker fees.</p>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 items-center pt-2">
+                    <div class="space-y-2">
+                        <label class="block text-xs font-bold text-slate-300 uppercase tracking-wider">Asset Valuation (<span class="curr-label">CAD</span>)</label>
+                        <div class="relative">
+                            <span class="absolute left-3.5 top-3 text-slate-500 font-bold">$</span>
+                            <input type="number" id="calc-price" value="1250000" step="50000" oninput="calculateSavings()" class="w-full bg-slate-950 border border-slate-700 rounded-xl pl-8 pr-4 py-2.5 text-white text-sm font-bold focus:outline-none focus:border-amber-500 transition">
+                        </div>
+                    </div>
+
+                    <div class="bg-slate-950 p-4 rounded-2xl border border-slate-800 text-center space-y-1">
+                        <p class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Traditional Fee (5%)</p>
+                        <p id="trad-fee" class="text-xl font-black text-red-400">$62,500</p>
+                    </div>
+
+                    <div class="bg-amber-500/10 p-4 rounded-2xl border border-amber-500/30 text-center space-y-1">
+                        <p class="text-[11px] font-black text-amber-400 uppercase tracking-wider">Your Total Saved Equity</p>
+                        <p id="saved-fee" class="text-2xl font-black text-amber-400">$43,750</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ================= VIEW 3: OWNER DASHBOARD ================= -->
+        <div id="dashboard-view" class="hidden max-w-7xl mx-auto px-4 py-10 w-full space-y-8 animate-fade-in">
+            <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-slate-800 pb-6">
+                <div>
+                    <h2 class="text-2xl md:text-3xl font-black text-white tracking-tight">Asset Manager Dashboard</h2>
+                    <p class="text-xs text-slate-400 mt-1">Manage map visibility, monitor lead inquiries, and submit new property records.</p>
+                </div>
+                <button onclick="openModal('googleFormModal')" class="bg-amber-500 hover:bg-amber-400 text-slate-950 font-black px-4 py-2.5 rounded-xl text-xs shadow-lg shadow-amber-500/20 transition flex items-center">
+                    <i class="fa-solid fa-plus-circle mr-2"></i> Submit New Listing Details
+                </button>
+            </div>
+
+            <!-- Metrics Grid -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-5">
+                <div class="bg-slate-900/90 p-5 rounded-2xl border border-slate-800 space-y-1">
+                    <span class="text-xs font-semibold text-slate-400">Total Portfolio Impressions</span>
+                    <p class="text-3xl font-black text-white">52,180</p>
+                    <span class="text-[11px] text-emerald-400 font-bold"><i class="fa-solid fa-arrow-trend-up mr-1"></i> +18.4% this month</span>
+                </div>
+                <div class="bg-slate-900/90 p-5 rounded-2xl border border-slate-800 space-y-1">
+                    <span class="text-xs font-semibold text-slate-400">Interactive Map Pin Clicks</span>
+                    <p class="text-3xl font-black text-amber-400">4,290</p>
+                    <span class="text-[11px] text-emerald-400 font-bold"><i class="fa-solid fa-arrow-trend-up mr-1"></i> +24.1% this month</span>
+                </div>
+                <div class="bg-slate-900/90 p-5 rounded-2xl border border-slate-800 space-y-1">
+                    <span class="text-xs font-semibold text-slate-400">Direct Buyer Inquiries</span>
+                    <p class="text-3xl font-black text-white">118</p>
+                    <span class="text-[11px] text-slate-400 font-semibold">Across Canada &amp; USA</span>
+                </div>
+                <div class="bg-slate-900/90 p-5 rounded-2xl border border-slate-800 space-y-1">
+                    <span class="text-xs font-semibold text-slate-400">Current Plan Status</span>
+                    <p class="text-2xl font-black text-amber-500">GOLD TIER</p>
+                    <span class="text-[11px] text-slate-400 font-semibold">Active Member</span>
+                </div>
+            </div>
+
+            <!-- Active Assets Management Table -->
+            <div class="bg-slate-900/90 rounded-2xl border border-slate-800 overflow-hidden shadow-xl">
+                <div class="px-6 py-4 border-b border-slate-800 font-black text-white text-sm flex items-center justify-between">
+                    <span><i class="fa-solid fa-folder-open text-amber-500 mr-2"></i> Manage Portfolio Listings</span>
+                    <span class="text-xs text-slate-400 font-normal">Showing 5 Sample Listings</span>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-xs text-slate-300">
+                        <thead class="bg-slate-950 text-slate-400 uppercase text-[10px] tracking-wider border-b border-slate-800 font-bold">
+                            <tr>
+                                <th class="p-4">Property Name</th>
+                                <th class="p-4">Category</th>
+                                <th class="p-4">Location</th>
+                                <th class="p-4">Closed Price</th>
+                                <th class="p-4">Status</th>
+                                <th class="p-4 text-right">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-800/80 font-medium">
+                            <tr class="hover:bg-slate-800/40 transition">
+                                <td class="p-4 font-bold text-white flex items-center space-x-2">
+                                    <span class="w-2 h-2 rounded-full bg-red-500"></span>
+                                    <span>300 Acres Raw Timberland</span>
+                                </td>
+                                <td class="p-4">Raw Land</td>
+                                <td class="p-4">Ontario, CA</td>
+                                <td class="p-4 font-bold text-amber-400">$950,000 CAD</td>
+                                <td class="p-4"><span class="bg-red-600/90 text-white text-[10px] font-black px-2 py-0.5 rounded shadow uppercase">SOLD</span></td>
+                                <td class="p-4 text-right"><button onclick="openDetail(1)" class="text-amber-400 hover:underline font-bold">View</button></td>
+                            </tr>
+                            <tr class="hover:bg-slate-800/40 transition">
+                                <td class="p-4 font-bold text-white flex items-center space-x-2">
+                                    <span class="w-2 h-2 rounded-full bg-red-500"></span>
+                                    <span>Montana Working Cattle Ranch</span>
+                                </td>
+                                <td class="p-4">Farms &amp; Ranches</td>
+                                <td class="p-4">Montana, US</td>
+                                <td class="p-4 font-bold text-amber-400">$2,800,000 CAD</td>
+                                <td class="p-4"><span class="bg-red-600/90 text-white text-[10px] font-black px-2 py-0.5 rounded shadow uppercase">SOLD</span></td>
+                                <td class="p-4 text-right"><button onclick="openDetail(2)" class="text-amber-400 hover:underline font-bold">View</button></td>
+                            </tr>
+                            <tr class="hover:bg-slate-800/40 transition">
+                                <td class="p-4 font-bold text-white flex items-center space-x-2">
+                                    <span class="w-2 h-2 rounded-full bg-red-500"></span>
+                                    <span>Dallas Luxury Residential Estate</span>
+                                </td>
+                                <td class="p-4">Residential</td>
+                                <td class="p-4">Texas, US</td>
+                                <td class="p-4 font-bold text-amber-400">$1,100,000 CAD</td>
+                                <td class="p-4"><span class="bg-red-600/90 text-white text-[10px] font-black px-2 py-0.5 rounded shadow uppercase">SOLD</span></td>
+                                <td class="p-4 text-right"><button onclick="openDetail(3)" class="text-amber-400 hover:underline font-bold">View</button></td>
+                            </tr>
+                            <tr class="hover:bg-slate-800/40 transition">
+                                <td class="p-4 font-bold text-white flex items-center space-x-2">
+                                    <span class="w-2 h-2 rounded-full bg-red-500"></span>
+                                    <span>Industrial Equipment Fleet &amp; Business</span>
+                                </td>
+                                <td class="p-4">Business</td>
+                                <td class="p-4">Texas, US</td>
+                                <td class="p-4 font-bold text-amber-400">$3,200,000 CAD</td>
+                                <td class="p-4"><span class="bg-red-600/90 text-white text-[10px] font-black px-2 py-0.5 rounded shadow uppercase">SOLD</span></td>
+                                <td class="p-4 text-right"><button onclick="openDetail(4)" class="text-amber-400 hover:underline font-bold">View</button></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- MODAL 1: PROPERTY DETAIL SHOWCASE -->
+    <div id="detailModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-slate-900 border border-slate-800 rounded-3xl max-w-2xl w-full max-h-[90vh] overflow-y-auto p-6 space-y-6 relative shadow-2xl animate-fade-in">
+            <button onclick="closeModal('detailModal')" class="absolute top-4 right-4 w-9 h-9 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white flex items-center justify-center transition">
+                <i class="fa-solid fa-xmark text-base"></i>
+            </button>
+            <div class="relative rounded-2xl overflow-hidden h-72">
+                <img id="modal-img" src="" class="w-full h-full object-cover">
+                <!-- BOLD RED SOLD BADGE -->
+                <span class="absolute top-4 left-4 bg-red-600 text-white text-xs font-black px-3 py-1.5 rounded-lg shadow-lg uppercase tracking-wider">
+                    <i class="fa-solid fa-lock mr-1.5"></i> SOLD / RECENTLY CLOSED
+                </span>
+            </div>
+            <div class="space-y-2">
+                <div class="flex items-center justify-between">
+                    <h3 id="modal-title" class="text-2xl font-black text-white"></h3>
+                    <span id="modal-price" class="text-2xl font-black text-amber-400"></span>
+                </div>
+                <p id="modal-loc" class="text-xs text-slate-400 font-bold flex items-center">
+                    <i class="fa-solid fa-location-dot text-amber-500 mr-1.5"></i> <span id="modal-loc-text"></span>
+                </p>
+            </div>
+            <div class="bg-slate-950 p-4 rounded-2xl border border-slate-800 text-xs text-slate-300 space-y-2">
+                <p class="font-extrabold text-amber-400 flex items-center">
+                    <i class="fa-solid fa-shield-halved mr-1.5"></i> Verified Platform Transaction
+                </p>
+                <p class="leading-relaxed text-slate-400">This real estate listing was finalized through Grid &amp; Meridian's 1.5% platform fee framework, yielding maximum equity retention for the seller.</p>
+            </div>
+            <button onclick="closeModal('detailModal')" class="w-full py-3.5 bg-slate-800 hover:bg-slate-700 text-white font-extrabold rounded-xl text-xs uppercase tracking-wider transition">
+                Close View
+            </button>
+        </div>
+    </div>
+
+    <!-- MODAL 2: INTEGRATED GOOGLE FORM SUBMISSION FOR PROPERTY DETAILS -->
+    <div id="googleFormModal" class="fixed inset-0 bg-slate-950/85 backdrop-blur-md z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-slate-900 border border-slate-800 rounded-3xl max-w-3xl w-full h-[85vh] p-6 flex flex-col relative shadow-2xl animate-fade-in">
+            <button onclick="closeModal('googleFormModal')" class="absolute top-4 right-4 w-9 h-9 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white flex items-center justify-center transition z-10">
+                <i class="fa-solid fa-xmark text-base"></i>
+            </button>
+            <div class="mb-4">
+                <h3 class="text-xl font-black text-white">Submit Property or Asset Details</h3>
+                <p class="text-xs text-slate-400 mt-1">Enter your details below to submit your property directly into our Google Forms/Sheets listing pipeline.</p>
+            </div>
+            
+            <!-- GOOGLE FORM IFRAME CONTAINER -->
+            <div class="flex-grow w-full bg-slate-950 rounded-2xl overflow-hidden border border-slate-800 relative">
+                <!-- User can replace src URL below with their exact Google Form embed link -->
+                <iframe src="https://docs.google.com/forms/d/e/1FAIpQLSc_EXAMPLE_FORM_ID/viewform?embedded=true" width="100%" height="100%" frameborder="0" marginheight="0" marginwidth="0" class="w-full h-full">
+                    Loading Form...
+                </iframe>
+            </div>
+        </div>
+    </div>
+
+    <!-- FOOTER WITH SMALL NON-BROKERAGE DISCLAIMER IN WHITE TEXT -->
+    <footer class="bg-[#070A10] border-t border-slate-800/80 py-8 px-4 text-slate-400 text-xs">
+        <div class="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
+            <div class="flex items-center space-x-2">
+                <div class="w-6 h-6 rounded bg-amber-500 text-slate-950 flex items-center justify-center font-black text-xs">
+                    <i class="fa-solid fa-globe"></i>
+                </div>
+                <span class="font-black text-white tracking-wider">GRID &amp; MERIDIAN</span>
+                <span>&copy; 2026. All Rights Reserved.</span>
+            </div>
+            
+            <div class="flex space-x-6 text-slate-400 text-xs font-semibold">
+                <a href="#" class="hover:text-amber-400 transition">Privacy Policy</a>
+                <a href="#" class="hover:text-amber-400 transition">Terms of Service</a>
+                <a href="#" class="hover:text-amber-400 transition">1.5% Fee Schedule</a>
+            </div>
+        </div>
+
+        <!-- NON-BROKERAGE LEGAL DISCLAIMER IN CLEAN SMALL WHITE TEXT -->
+        <div class="max-w-7xl mx-auto mt-6 pt-6 border-t border-slate-800/60 text-center">
+            <p class="text-[11px] text-white/90 leading-relaxed max-w-4xl mx-auto font-normal">
+                Grid &amp; Meridian is a digital asset showcasing, media, and technology platform, not a licensed real estate broker, dealer, or financial advisor. All property transactions, closing escrow services, and conveyancing are executed through licensed independent legal professionals and third-party brokerages in their respective provincial and state jurisdictions across Canada and the United States.
+            </p>
+        </div>
+    </footer>
+
+    <!-- INTERACTIVE SCRIPT LOGIC -->
+    <script>
+        // GLOBAL STATE
+        let currentCurrency = 'CAD';
+        let currencyFxRate = 0.74; // CAD to USD conversion multiplier
+        let currentCategory = 'ALL';
+        let currentCountry = 'ALL';
+        let map;
+        let markers = [];
+
+        // SAMPLE PROPERTY DATASET (ALL MARKED SOLD WITH IMAGES)
+        const properties = [
+            {
+                id: 1,
+                title: "300 Acres Raw Timberland",
+                cat: "LAND",
+                country: "CA",
+                loc: "Thunder Bay, Ontario, Canada",
+                lat: 48.3809,
+                lng: -89.2477,
+                priceCAD: 950000,
+                img: "https://images.unsplash.com/photo-1500382017468-9049fed747ef?auto=format&fit=crop&w=800&q=80"
+            },
+            {
+                id: 2,
+                title: "Montana Working Cattle Ranch",
+                cat: "FARM",
+                country: "US",
+                loc: "Fergus County, Montana, USA",
+                lat: 46.8797,
+                lng: -110.3626,
+                priceCAD: 2800000,
+                img: "https://images.unsplash.com/photo-1500595046743-cd271d694d30?auto=format&fit=crop&w=800&q=80"
+            },
+            {
+                id: 3,
+                title: "Dallas Suburban Luxury Estate",
+                cat: "RESIDENTIAL",
+                country: "US",
+                loc: "Dallas, Texas, USA",
+                lat: 32.7767,
+                lng: -96.7970,
+                priceCAD: 1100000,
+                img: "https://images.unsplash.com/photo-1564013799919-ab600027ffc6?auto=format&fit=crop&w=800&q=80"
+            },
+            {
+                id: 4,
+                title: "Heavy Equipment Fleet & Yard",
+                cat: "BUSINESS",
+                country: "US",
+                loc: "Houston, Texas, USA",
+                lat: 29.7604,
+                lng: -95.3698,
+                priceCAD: 3200000,
+                img: "https://images.unsplash.com/photo-1581094288338-2314dddb7ece?auto=format&fit=crop&w=800&q=80"
+            },
+            {
+                id: 5,
+                title: "Industrial Commercial Yard Rental",
+                cat: "RENTAL",
+                country: "CA",
+                loc: "Calgary, Alberta, Canada",
+                lat: 51.0447,
+                lng: -114.0719,
+                priceCAD: 5500,
+                img: "https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?auto=format&fit=crop&w=800&q=80"
+            }
+        ];
+
+        // INITIALIZE APPLICATION
+        window.onload = function() {
+            initMap();
+            renderListings();
+            calculateSavings();
+        };
+
+        function initMap() {
+            // Center over North America
+            map = L.map('map', { zoomControl: false }).setView([44.0, -98.0], 4);
+            L.control.zoom({ position: 'bottomright' }).addTo(map);
+
+            // OpenStreetMap CARTO Dark Tile Layer
+            L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+                attribution: '&copy; OpenStreetMap contributors &copy; CARTO',
+                maxZoom: 18
+            }).addTo(map);
+
+            renderMarkers();
+        }
+
+        function renderMarkers() {
+            // Remove existing map markers
+            markers.forEach(m => map.removeLayer(m));
+            markers = [];
+
+            const filtered = properties.filter(p => {
+                const matchCat = (currentCategory === 'ALL' || p.cat === currentCategory);
+                const matchCountry = (currentCountry === 'ALL' || p.country === currentCountry);
+                return matchCat && matchCountry;
+            });
+
+            filtered.forEach(p => {
+                const priceFormatted = formatPrice(p.priceCAD);
+                const marker = L.marker([p.lat, p.lng]).addTo(map);
+                marker.bindPopup(`
+                    <div class="p-1 space-y-1.5">
+                        <span class="text-[9px] bg-red-600 text-white font-black px-1.5 py-0.5 rounded uppercase">SOLD</span>
+                        <h4 class="font-black text-sm text-white">${p.title}</h4>
+                        <p class="text-xs text-amber-400 font-extrabold">${priceFormatted}</p>
+                        <p class="text-[10px] text-slate-400">${p.loc}</p>
+                    </div>
+                `);
+                markers.push(marker);
+            });
+        }
+
+        function renderListings() {
+            const container = document.getElementById('listings-feed');
+            container.innerHTML = '';
+
+            const filtered = properties.filter(p => {
+                const matchCat = (currentCategory === 'ALL' || p.cat === currentCategory);
+                const matchCountry = (currentCountry === 'ALL' || p.country === currentCountry);
+                return matchCat && matchCountry;
+            });
+
+            if(filtered.length === 0) {
+                container.innerHTML = `<div class="p-8 text-center text-slate-500 text-xs">No assets match the selected filters.</div>`;
+                return;
+            }
+
+            filtered.forEach(p => {
+                const priceFormatted = formatPrice(p.priceCAD);
+                const card = document.createElement('div');
+                card.className = "bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden hover:border-slate-700 transition flex flex-col group shadow-xl animate-fade-in";
+                card.innerHTML = `
+                    <div class="relative h-48 overflow-hidden">
+                        <img src="${p.img}" class="w-full h-full object-cover group-hover:scale-105 transition duration-500">
+                        <!-- BOLD RED SOLD BADGE -->
+                        <span class="absolute top-3 left-3 bg-red-600 text-white text-[10px] font-black px-2.5 py-1 rounded-md shadow uppercase tracking-wider">
+                            <i class="fa-solid fa-lock mr-1"></i> SOLD / RECENTLY CLOSED
+                        </span>
+                        <div class="absolute bottom-3 right-3 bg-slate-950/90 backdrop-blur text-amber-400 text-xs font-black px-2.5 py-1 rounded-lg border border-amber-500/30">
+                            ${priceFormatted}
+                        </div>
+                    </div>
+                    <div class="p-4 space-y-3 flex-grow flex flex-col justify-between">
+                        <div>
+                            <span class="text-[10px] text-slate-400 font-bold uppercase tracking-wider">${p.cat} • ${p.loc}</span>
+                            <h3 class="font-black text-white text-base mt-0.5">${p.title}</h3>
+                        </div>
+                        <div class="pt-2 border-t border-slate-800/80 flex items-center justify-between">
+                            <span class="text-[11px] text-slate-400 font-medium"><i class="fa-solid fa-shield-halved text-amber-500 mr-1"></i> 1.5% Fee Model</span>
+                            <button onclick="openDetail(${p.id})" class="text-xs text-amber-400 font-black hover:underline flex items-center">
+                                View Showcase <i class="fa-solid fa-arrow-right text-[10px] ml-1"></i>
+                            </button>
+                        </div>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        // CURRENCY SWITCHER LOGIC
+        function setCurrency(curr) {
+            currentCurrency = curr;
+            document.getElementById('curr-cad').className = curr === 'CAD' ? "px-3 py-1 rounded-lg bg-amber-500 text-slate-950 shadow transition font-black" : "px-3 py-1 rounded-lg text-slate-400 hover:text-white transition";
+            document.getElementById('curr-usd').className = curr === 'USD' ? "px-3 py-1 rounded-lg bg-amber-500 text-slate-950 shadow transition font-black" : "px-3 py-1 rounded-lg text-slate-400 hover:text-white transition";
+            
+            document.querySelectorAll('.curr-label').forEach(el => el.textContent = curr);
+            
+            if(curr === 'USD') {
+                document.querySelector('.price-silver').textContent = '$39';
+                document.querySelector('.price-gold').textContent = '$79';
+                document.querySelector('.price-platinum').textContent = '$159';
+            } else {
+                document.querySelector('.price-silver').textContent = '$49';
+                document.querySelector('.price-gold').textContent = '$99';
+                document.querySelector('.price-platinum').textContent = '$199';
+            }
+
+            renderListings();
+            renderMarkers();
+            calculateSavings();
+        }
+
+        function formatPrice(valCAD) {
+            let amount = valCAD;
+            if(currentCurrency === 'USD') {
+                amount = valCAD * currencyFxRate;
+            }
+            return new Intl.NumberFormat('en-US', { style: 'currency', currency: currentCurrency, maximumFractionDigits: 0 }).format(amount);
+        }
+
+        function filterCat(cat) {
+            currentCategory = cat;
+            ['ALL', 'LAND', 'FARM', 'RESIDENTIAL', 'BUSINESS', 'RENTAL'].forEach(c => {
+                const btn = document.getElementById(`btn-cat-${c}`);
+                if(btn) {
+                    btn.className = (c === cat) ? 
+                        "px-3 py-1.5 rounded-lg bg-amber-500 text-slate-950 font-extrabold whitespace-nowrap shadow" : 
+                        "px-3 py-1.5 rounded-lg bg-slate-800 text-slate-300 hover:text-white whitespace-nowrap border border-slate-700 font-semibold";
+                }
+            });
+            renderListings();
+            renderMarkers();
+        }
+
+        function filterCountry(country) {
+            currentCountry = country;
+            ['ALL', 'CA', 'US'].forEach(c => {
+                const btn = document.getElementById(`btn-country-${c}`);
+                if(btn) {
+                    btn.className = (c === country) ? 
+                        "flex-1 py-1.5 rounded-lg bg-amber-500 text-slate-950 font-extrabold text-center transition" : 
+                        "flex-1 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold border border-slate-700 text-center transition";
+                }
+            });
+            renderListings();
+            renderMarkers();
+        }
+
+        function switchTab(tabId) {
+            ['map-view', 'pricing-view', 'dashboard-view'].forEach(id => {
+                document.getElementById(id).classList.add('hidden');
+            });
+            document.getElementById(tabId).classList.remove('hidden');
+
+            if(tabId === 'map-view') setTimeout(() => map.invalidateSize(), 150);
+        }
+
+        function openModal(id) { document.getElementById(id).classList.remove('hidden'); }
+        function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
+
+        function openDetail(id) {
+            const p = properties.find(item => item.id === id);
+            if(!p) return;
+            document.getElementById('modal-img').src = p.img;
+            document.getElementById('modal-title').textContent = p.title;
+            document.getElementById('modal-price').textContent = formatPrice(p.priceCAD);
+            document.getElementById('modal-loc-text').textContent = p.loc;
+            openModal('detailModal');
+        }
+
+        function calculateSavings() {
+            const price = parseFloat(document.getElementById('calc-price').value) || 0;
+            const trad = price * 0.05;
+            const flat = price * 0.015;
+            const saved = trad - flat;
+
+            const currSymbol = '$';
+            document.getElementById('trad-fee').textContent = currSymbol + trad.toLocaleString('en-US', {maximumFractionDigits:0});
+            document.getElementById('saved-fee').textContent = currSymbol + saved.toLocaleString('en-US', {maximumFractionDigits:0});
+        }
+
+        function subscribePlan(plan) {
+            alert(`Opening Stripe Checkout window for Grid & Meridian ${plan} Plan (${currentCurrency})...`);
+        }
+    </script>
+</body>
+</html>
+```
+
+### Summary of What Was Created:
+- **Live Preview Enabled**: The full single-file website code is generated above in `index.html`. You can directly click **Preview** in the editor panel to view, test, and render the complete interactive application.
+- **Removed Lender Hub**: The navigation and interface now strictly present property showcases, platform features, pricing tiers, and owner management.
+- **All Properties Display Bold Red "SOLD / RECENTLY CLOSED"**: Included on map pins, card media overlays, and modal views.
+- **Google Form Submission Modal**: Connected to the "List Asset" buttons so owners can submit property details into your workflow.
+- **Full CAD/USD Currency Switcher & 1.5% Fee Calculator**: Interactive controls for live conversion and fee comparison.
+- **Legal Disclaimer**: Positioned at the bottom footer in clear, small white text.
+```

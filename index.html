@@ -133,7 +133,7 @@
                     </div>
 
                     <!-- Open Listing Modal Button -->
-                    <button onclick="openModal('googleFormModal')" class="bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 font-extrabold px-4 py-2 rounded-xl text-xs shadow-lg shadow-amber-500/20 transition-all transform active:scale-95 flex items-center">
+                    <button onclick="openModal('function initMap() {             // Center over North America             map = L.map('map', { zoomControl: false }).setView([44.0, -98.0], 4);             L.control.zoom({ position: 'bottomright' }).addTo(map);              // Free OpenStreetMap Tile Layer (No API Key Required)             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {                 attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',                 maxZoom: 18             }).addTo(map);              renderMarkers();         }')" class="bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 font-extrabold px-4 py-2 rounded-xl text-xs shadow-lg shadow-amber-500/20 transition-all transform active:scale-95 flex items-center">
                         <i class="fa-solid fa-plus-circle mr-1.5 text-sm"></i>List Asset
                     </button>
                 </div>
@@ -486,26 +486,23 @@
     </div>
 
     <!-- MODAL 2: INTEGRATED GOOGLE FORM SUBMISSION FOR PROPERTY DETAILS -->
-    <div id="googleFormModal" class="fixed inset-0 bg-slate-950/85 backdrop-blur-md z-50 hidden flex items-center justify-center p-4">
-        <div class="bg-slate-900 border border-slate-800 rounded-3xl max-w-3xl w-full h-[85vh] p-6 flex flex-col relative shadow-2xl animate-fade-in">
-            <button onclick="closeModal('googleFormModal')" class="absolute top-4 right-4 w-9 h-9 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white flex items-center justify-center transition z-10">
-                <i class="fa-solid fa-xmark text-base"></i>
-            </button>
-            <div class="mb-4">
-                <h3 class="text-xl font-black text-white">Submit Property or Asset Details</h3>
-                <p class="text-xs text-slate-400 mt-1">Enter your details below to submit your property directly into our Google Forms/Sheets listing pipeline.</p>
-            </div>
-            
-            <!-- GOOGLE FORM https://docs.google.com/forms/d/e/1FAIpQLScm7myck3L1e_UtlBclJUvIqCVKAHyFh-cJkut7ZzS7IK1efA/viewform?usp=publish-editor CONTAINER -->
-            <div class="flex-grow w-full bg-slate-950 rounded-2xl overflow-hidden border border-slate-800 relative">
-                <!-- User can replace src URL below with their exact Google Form embed link -->
-                <<<iframe src="https://docs.google.com/forms/d/e/1FAIpQLScm7myck3L1e_UtlBclJUvIqCVKAHyFh-cJkut7ZzS7IK1efA/viewform?embedded=true" width="640" height="3000" frameborder="0" marginheight="0" marginwidth="0">Loading…</iframe> 
-                    Loading Form...
-                </<iframe>
-            </div>
+<div id="googleFormModal" class="fixed inset-0 bg-slate-950/85 backdrop-blur-md z-50 hidden flex items-start justify-center p-4 overflow-y-auto">
+    <div class="bg-slate-900 border border-slate-800 rounded-3xl max-w-3xl w-full my-8 p-6 flex flex-col relative shadow-2xl animate-fade-in">
+        <button onclick="closeModal('googleFormModal')" class="absolute top-4 right-4 w-9 h-9 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white flex items-center justify-center transition z-10">
+            <i class="fa-solid fa-xmark text-base"></i>
+        </button>
+        <div class="mb-4">
+            <h3 class="text-xl font-black text-white">Submit Property or Asset Details</h3>
+            <p class="text-xs text-slate-400 mt-1">Enter your details below to submit your property directly into our Google Forms/Sheets listing pipeline.</p>
+        </div>
+
+        <!-- GOOGLE FORM https://docs.google.com/forms/d/e/1FAIpQLScm7myck3L1e_UtBcLjUvIQCVKaHyFh-cJkut7ZzS7IK1efA/viewform?usp=publish-editor CONTAINER -->
+        <div class="flex-grow w-full bg-slate-950 rounded-2xl overflow-hidden border border-slate-800 relative">
+            <!-- User can replace src URL below with their exact Google Form embed link -->
+            <iframe src="https://docs.google.com/forms/d/e/1FAIpQLScm7myck3L1e_UtBcLjUvIQCVKaHyFh-cJkut7ZzS7IK1efA/viewform?embedded=true" width="640" height="3000" frameborder="0" marginheight="0" marginwidth="0">Loading...</iframe>
         </div>
     </div>
-
+</div>
     <!-- FOOTER WITH SMALL NON-BROKERAGE DISCLAIMER IN WHITE TEXT -->
     <footer class="bg-[#070A10] border-t border-slate-800/80 py-8 px-4 text-slate-400 text-xs">
         <div class="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">

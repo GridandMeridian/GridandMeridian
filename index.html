@@ -526,18 +526,18 @@
         // Initialize GIS Leaflet Map
         function initMap() {
     map = L.map('map').setView([49.2827, -101.5547], 4);
-    
+
     // Switch to free OpenStreetMap tiles (Zero API key required)
     L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
-    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
-    subdomains: 'abcd',
-    maxZoom: 19
-}).addTo(map);
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
+        subdomains: 'abcd',
+        maxZoom: 19
+    }).addTo(map);
 
     markersGroup = L.layerGroup().addTo(map);
     renderMarkers();
+    setTimeout(() => { map.invalidateSize(); }, 250);
 }
-
         // Render Map Markers
         function renderMarkers() {
             markersGroup.clearLayers();

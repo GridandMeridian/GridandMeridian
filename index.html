@@ -484,8 +484,14 @@
             </button>
         </div>
     </div>
+<!-- LIST ASSET BUTTON -->
+<div class="flex items-center justify-center my-6">
+    <button onclick="openModal('googleFormModal')" class="px-6 py-3 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-black transition shadow-lg flex items-center gap-2">
+        <i class="fa-solid fa-plus"></i> List Asset
+    </button>
+</div>
 
-   <!-- MODAL 2: INTEGRATED GOOGLE FORM SUBMISSION FOR PROPERTY DETAILS -->
+<!-- MODAL 2: INTEGRATED GOOGLE FORM SUBMISSION FOR PROPERTY DETAILS -->
 <div id="googleFormModal" class="fixed inset-0 bg-slate-950/85 backdrop-blur-md z-50 hidden flex items-start justify-center p-4 overflow-y-auto">
     <div class="bg-slate-900 border border-slate-800 rounded-3xl max-w-3xl w-full my-8 p-6 flex flex-col relative shadow-2xl animate-fade-in">
         <button onclick="closeModal('googleFormModal')" class="absolute top-4 right-4 w-9 h-9 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white flex items-center justify-center transition z-10">
@@ -500,7 +506,8 @@
             <iframe src="https://docs.google.com/forms/d/e/1FAIpQLScm7myck3L1e_UtBcLjUvIQCVKaHyFh-cJkut7ZzS7IK1efA/viewform?embedded=true" width="100%" height="1200" frameborder="0" marginheight="0" marginwidth="0">Loading...</iframe>
         </div>
     </div>
-    
+</div>
+
                 <span class="font-black text-white tracking-wider">GRID &amp; MERIDIAN</span>
                 <span>&copy; 2026. All Rights Reserved.</span>
             </div>

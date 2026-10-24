@@ -515,15 +515,17 @@
 
         // Initialize GIS Leaflet Map
         function initMap() {
-            map = L.map('map').setView([49.2827, -101.5547], 4);
-            L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-                attribution: '&copy; OpenStreetMap contributors &copy; CARTO',
-                maxZoom: 18
-            }).addTo(map);
+    map = L.map('map').setView([49.2827, -101.5547], 4);
+    
+    // Switch to free OpenStreetMap tiles (Zero API key required)
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; OpenStreetMap contributors',
+        maxZoom: 18
+    }).addTo(map);
 
-            markersGroup = L.layerGroup().addTo(map);
-            renderMarkers();
-        }
+    markersGroup = L.layerGroup().addTo(map);
+    renderMarkers();
+}
 
         // Render Map Markers
         function renderMarkers() {
